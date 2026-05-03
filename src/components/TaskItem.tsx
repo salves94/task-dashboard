@@ -5,7 +5,7 @@ interface Props {
   task: Task;
   onToggle: (id: string) => void;
   onDelete: (id: string) => void;
-  onUpdate: (id: string, newTitle: string) => void; // Añadir esto
+  onUpdate: (id: string, newTitle: string, newCategory: Task['category']) => void;
 }
 
 export function TaskItem({ task, onToggle, onDelete, onUpdate }: Props) {
