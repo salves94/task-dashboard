@@ -64,6 +64,15 @@ export default function App() {
           <p className="text-center py-10 text-gray-400 italic">No hay tareas en esta categoría.</p>
         )}
       </div>
+
+      <footer className="mt-12 py-6 border-t border-gray-100 text-center">
+        <p className="text-gray-500 text-sm font-medium">
+          Desarrollado con ❤️ por <span className="text-indigo-600 font-bold">Sergio Alves</span>
+        </p>
+        <p className="text-gray-400 text-[10px] uppercase tracking-widest mt-1">
+          © {new Date().getFullYear()} — React + TypeScript
+        </p>
+      </footer>
     </main>
   );
 }
