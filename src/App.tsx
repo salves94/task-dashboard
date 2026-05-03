@@ -2,13 +2,17 @@ import { useState } from 'react';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import type { Task } from './types/index';
 
-// Asegúrate de que estos archivos existan en src/components/
+// Componentes
 import { TaskForm } from './components/TaskForm';
 import { TaskItem } from './components/TaskItem';
+
+// Definición de tipos para los filtros
+type StatusFilter = 'pending' | 'completed';
 
 export default function App() {
   const [tasks, setTasks] = useLocalStorage<Task[]>('tasks-v1', []);
   const [filter, setFilter] = useState<'Todas' | Task['category']>('Todas');
+  const [statusTab, setStatusTab] = useState<StatusFilter>('pending');
 
   const handleAddTask = (title: string, category: Task['category']) => {
     const newTask: Task = {
@@ -29,40 +33,81 @@ export default function App() {
     setTasks(tasks.filter(t => t.id !== id));
   };
 
-  const filteredTasks = tasks.filter(t => filter === 'Todas' || t.category === filter);
+  const updateTask = (id: string, newTitle: string, newCategory: Task['category']) => {
+    setTasks(tasks.map(t => 
+      t.id === id ? { ...t, title: newTitle, category: newCategory } : t
+    ));
+  };
+
+  const filteredTasks = tasks.filter(task => {
+    const matchesStatus = statusTab === 'completed' ? task.completed : !task.completed;
+    const matchesCategory = filter === 'Todas' || task.category === filter;
+    return matchesStatus && matchesCategory;
+  });
 
   return (
-    <main className="min-h-screen p-8 max-w-2xl mx-auto">
-      <h1 className="text-4xl font-black mb-8 text-indigo-600">TaskFlow</h1>
+    <main className="min-h-screen p-8 max-w-2xl mx-auto flex flex-col">
+      <div className="flex-grow">
+        <h1 className="text-4xl font-black mb-8 text-indigo-600">TaskFlow</h1>
 
-      <TaskForm onAddTask={handleAddTask} />
+        <TaskForm onAddTask={handleAddTask} />
 
-      <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
-        {['Todas', 'Personal', 'Trabajo', 'Salud'].map((f) => (
+        {/* Pestañas de Estado (Pendientes vs Hecho) */}
+        <div className="flex bg-gray-100 p-1 rounded-xl mb-6">
           <button
-            key={f}
-            onClick={() => setFilter(f as any)}
-            className={`px-4 py-1.5 rounded-full text-sm font-semibold transition-all ${
-              filter === f ? 'bg-indigo-600 text-white' : 'bg-white text-gray-500 border border-gray-200'
+            onClick={() => setStatusTab('pending')}
+            className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${
+              statusTab === 'pending' 
+              ? 'bg-white text-indigo-600 shadow-sm' 
+              : 'text-gray-500 hover:text-gray-700'
             }`}
           >
-            {f}
+            Pendientes ({tasks.filter(t => !t.completed).length})
           </button>
-        ))}
-      </div>
+          <button
+            onClick={() => setStatusTab('completed')}
+            className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${
+              statusTab === 'completed' 
+              ? 'bg-white text-indigo-600 shadow-sm' 
+              : 'text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            Hecho ({tasks.filter(t => t.completed).length})
+          </button>
+        </div>
 
-      <div className="grid gap-3">
-        {filteredTasks.map(task => (
-          <TaskItem 
-            key={task.id} 
-            task={task} 
-            onToggle={toggleTask} 
-            onDelete={deleteTask} 
-          />
-        ))}
-        {filteredTasks.length === 0 && (
-          <p className="text-center py-10 text-gray-400 italic">No hay tareas en esta categoría.</p>
-        )}
+        {/* Filtros de Categoría */}
+        <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
+          {['Todas', 'Personal', 'Trabajo', 'Salud'].map((f) => (
+            <button
+              key={f}
+              onClick={() => setFilter(f as any)}
+              className={`px-4 py-1.5 rounded-full text-sm font-semibold transition-all flex-shrink-0 ${
+                filter === f ? 'bg-indigo-600 text-white' : 'bg-white text-gray-500 border border-gray-200'
+              }`}
+            >
+              {f}
+            </button>
+          ))}
+        </div>
+
+        {/* Lista de Tareas */}
+        <div className="grid gap-3">
+          {filteredTasks.map(task => (
+            <TaskItem 
+              key={task.id} 
+              task={task} 
+              onToggle={toggleTask} 
+              onDelete={deleteTask} 
+              onUpdate={updateTask}
+            />
+          ))}
+          {filteredTasks.length === 0 && (
+            <p className="text-center py-10 text-gray-400 italic">
+              No hay tareas {statusTab === 'completed' ? 'completadas' : 'pendientes'} en esta categoría.
+            </p>
+          )}
+        </div>
       </div>
 
       <footer className="mt-12 py-6 border-t border-gray-100 text-center">

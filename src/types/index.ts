@@ -1,5 +1,7 @@
 export type TaskCategory = 'Trabajo' | 'Personal' | 'Salud';
 
+export type StatusFilter = 'pending' | 'completed';
+
 export interface Task {
   id: string;
   title: string;
